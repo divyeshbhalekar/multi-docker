@@ -1,0 +1,28 @@
+sudo: required
+language: generic
+services: 
+  - docker
+
+
+before_install:
+  - docker build -t demodockeracc/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true demodockeracc/react-test npm test
+
+after_success:
+  - docker build -t demodockeracc/multi-client ./client
+  - docker build -t demodockeracc/multi-nginx ./nginx
+  - docker build -t demodockeracc/multi-server ./server
+  - docker build -t demodockeracc/multi-worker ./worker
+
+# log in to the docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+# Take those images and push to docker hub
+  - docker push demodockeracc/multi-client
+  - docker push demodockeracc/multi-nginx
+  - docker push demodockeracc/multi-server
+  - docker push demodockeracc/multi-worker
+
+
